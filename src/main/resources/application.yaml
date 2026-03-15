@@ -1,7 +1,46 @@
-server:
-  port: 8080
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    config:
+      uri: ${SPRING_CLOUD_CONFIG_URI:http://config-server:8888}
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: false
+      routes:
+        - id: user_route
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/api/v1/users/**
+        - id: media_route
+          uri: lb://MEDIA-SERVICE
+          predicates:
+            - Path=/api/v1/media/**
+        - id: subscription_route
+          uri: lb://SUBSCRIPTION-SERVICE
+          predicates:
+            - Path=/api/v1/subscriptions/**
 
 eureka:
   client:
-    service-url:
-      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+    serviceUrl:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://discovery-server:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.http.server.reactive: INFO
+    org.springframework.web.server: INFO
+    com.netflix.discovery: WARN
